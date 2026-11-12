@@ -1,216 +1,442 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <errno.h>
-#include <math.h>
-#include <stdint.h>
+#include <limits.h>
 
-#define MAX_RECTANGLES 1000
-#define TOLERANCE 0.0001
+#define START_SIZE 5
 
-typedef struct {
+struct Rectangle {
     int id;
     double width;
     double height;
     double area;
     double perimeter;
-} Rectangle;
+};
 
-typedef struct {
-    Rectangle *items;
-    size_t count;
-    size_t capacity;
-} RectangleList;
+struct Rectangle *rectangles = NULL;
+int count = 0;
+int capacity = 0;
 
-int read_line(const char *message, char *text, size_t size)
+/* Read a line from the user */
+int readLine(char text[], int size)
 {
-    size_t len;
-    int ch;
-
-    printf("%s", message);
-
-    if (fgets(text, (int)size, stdin) == NULL) {
+    if (fgets(text, size, stdin) == NULL)
         return 0;
+
+    if (strchr(text, '\n') == NULL) {
+        int ch;
+        while ((ch = getchar()) != '\n' && ch != EOF)
+            ;
     }
 
-    len = strlen(text);
+    text[strcspn(text, "\n")] = '\0';
+    return 1;
+}
 
-    if (len > 0 && text[len - 1] == '\n') {
-        text[len - 1] = '\0';
-        return 1;
+/* Read a positive integer */
+int readInt(char message[], int *value)
+{
+    char text[100];
+    char *end;
+    long num;
+
+    while (1) {
+        printf("%s", message);
+
+        if (!readLine(text, sizeof(text)))
+            return 0;
+
+        errno = 0;
+        num = strtol(text, &end, 10);
+
+        while (isspace((unsigned char)*end))
+            end++;
+
+        if (end == text || *end != '\0' ||
+            errno == ERANGE || num <= 0 || num > INT_MAX) {
+            printf("Please enter a valid positive integer.\n");
+        } else {
+            *value = (int)num;
+            return 1;
+        }
     }
+}
 
-    if (feof(stdin)) {
-        return 1;
+/* Read a positive decimal number */
+int readDouble(char message[], double *value)
+{
+    char text[100];
+    char *end;
+    double num;
+
+    while (1) {
+        printf("%s", message);
+
+        if (!readLine(text, sizeof(text)))
+            return 0;
+
+        errno = 0;
+        num = strtod(text, &end);
+
+        while (isspace((unsigned char)*end))
+            end++;
+
+        if (end == text || *end != '\0' ||
+            errno == ERANGE || num != num ||
+            num <= 0 || num > 1e100) {
+            printf("Please enter a valid positive number.\n");
+        } else {
+            *value = num;
+            return 1;
+        }
     }
+}
 
-    ch = getchar();
-    if (ch == '\n' || ch == EOF) {
-        return 1;
-    }
+/* Calculate area and perimeter */
+void calculate(struct Rectangle *r)
+{
+    r->area = r->width * r->height;
+    r->perimeter = 2 * (r->width + r->height);
+}
 
-    while (ch != '\n' && ch != EOF) {
-        ch = getchar();
+/* Find rectangle using ID */
+int findRectangle(int id)
+{
+    int i;
+
+    for (i = 0; i < count; i++) {
+        if (rectangles[i].id == id)
+            return i;
     }
 
     return -1;
 }
 
-int read_int(const char *message, int *value)
+/* Increase array size when needed */
+int increaseCapacity(void)
 {
-    char text[100];
-    char *end;
-    long number;
-    int status;
+    int newCapacity;
+    struct Rectangle *temp;
 
-    while (1) {
-        status = read_line(message, text, sizeof(text));
-        if (status == 0) {
-            return 0;
-        }
-        if (status < 0) {
-            printf("Input is too long.\n");
-            continue;
-        }
+    if (capacity == 0)
+        newCapacity = START_SIZE;
+    else
+        newCapacity = capacity * 2;
 
-        errno = 0;
-        number = strtol(text, &end, 10);
-        while (*end == ' ' || *end == '\t') {
-            end++;
-        }
+    temp = realloc(rectangles,
+                   newCapacity * sizeof(struct Rectangle));
 
-        if (end == text || *end != '\0' || errno != 0 ||
-            number < 1 || number > 2147483647L) {
-            printf("Enter a positive whole number.\n");
-            continue;
-        }
-
-           list->items[smallest].area, list->items[smallest].id);
-    printf("Total area: %.2f\n", total);
-    printf("Average area: %.2f\n", total / (double)list->count);
-}
-
-int compare_area(const void *a, const void *b)
-{
-    const Rectangle *first = a;
-    const Rectangle *second = b;
-
-    if (first->area < second->area) {
-        return -1;
-    }
-    if (first->area > second->area) {
-        return 1;
-    }
-    if (first->id < second->id) {
-        return -1;
-    }
-    if (first->id > second->id) {
-        return 1;
-    }
-    return 0;
-}
-
-void show_sorted(const RectangleList *list)
-{
-    Rectangle *copy;
-    size_t i;
-
-    if (list->count == 0) {
-        printf("No rectangles to sort.\n");
-        return;
-    }
-
-    copy = malloc(list->count * sizeof(Rectangle));
-    if (copy == NULL) {
-        printf("Could not create sorted copy.\n");
-        return;
-    }
-
-    memcpy(copy, list->items, list->count * sizeof(Rectangle));
-    qsort(copy, list->count, sizeof(Rectangle), compare_area);
-
-    printf("Rectangles sorted by area (ascending):\n");
-    for (i = 0; i < list->count; i++) {
-        display_rectangle(&copy[i]);
-    }
-
-    free(copy);
-}
-
-int filter_by_area(const RectangleList *list)
-{
-    double threshold;
-    size_t i;
-    int found = 0;
-
-    if (!read_threshold(&threshold)) {
+    if (temp == NULL) {
+        printf("Memory allocation failed.\n");
         return 0;
     }
 
-    for (i = 0; i < list->count; i++) {
-        if (list->items[i].area > threshold) {
-            display_rectangle(&list->items[i]);
-            found = 1;
-        }
-    }
-
-    if (!found) {
-        printf("No rectangle has area greater than %.2f.\n", threshold);
-    }
+    rectangles = temp;
+    capacity = newCapacity;
 
     return 1;
 }
 
+/* Check whether rectangle is a square */
+int isSquare(struct Rectangle r)
+{
+    double difference;
+
+    if (r.width > r.height)
+        difference = r.width - r.height;
+    else
+        difference = r.height - r.width;
+
+    return difference <= 0.0001 *
+           (r.width > r.height ? r.width : r.height);
+}
+
+/* Display one rectangle */
+void displayRectangle(struct Rectangle r)
+{
+    printf("\nID: %d", r.id);
+    printf("\nWidth: %.2f", r.width);
+    printf("\nHeight: %.2f", r.height);
+    printf("\nArea: %.2f", r.area);
+    printf("\nPerimeter: %.2f", r.perimeter);
+
+    if (isSquare(r))
+        printf("\nType: Square\n");
+    else
+        printf("\nType: Rectangle\n");
+}
+
+/* Add a rectangle */
+int addRectangle(void)
+{
+    struct Rectangle r;
+
+    if (!readInt("Enter rectangle ID: ", &r.id))
+        return 0;
+
+    if (findRectangle(r.id) != -1) {
+        printf("This ID already exists.\n");
+        return 1;
+    }
+
+    if (!readDouble("Enter width: ", &r.width))
+        return 0;
+
+    if (!readDouble("Enter height: ", &r.height))
+        return 0;
+
+    calculate(&r);
+
+    if (count == capacity) {
+        if (!increaseCapacity())
+            return 1;
+    }
+
+    rectangles[count] = r;
+    count++;
+
+    printf("Rectangle added successfully!\n");
+    return 1;
+}
+
+/* Display all rectangles */
+void displayAll(void)
+{
+    int i;
+
+    if (count == 0) {
+        printf("No rectangles available.\n");
+        return;
+    }
+
+    for (i = 0; i < count; i++) {
+        printf("\n--------------------");
+        displayRectangle(rectangles[i]);
+    }
+}
+
+/* Search for a rectangle */
+int searchRectangle(void)
+{
+    int id, index;
+
+    if (!readInt("Enter ID to search: ", &id))
+        return 0;
+
+    index = findRectangle(id);
+
+    if (index == -1)
+        printf("Rectangle not found.\n");
+    else
+        displayRectangle(rectangles[index]);
+
+    return 1;
+}
+
+/* Update rectangle details */
+int updateRectangle(void)
+{
+    int id, index;
+    double width, height;
+
+    if (!readInt("Enter ID to update: ", &id))
+        return 0;
+
+    index = findRectangle(id);
+
+    if (index == -1) {
+        printf("Rectangle not found.\n");
+        return 1;
+    }
+
+    if (!readDouble("Enter new width: ", &width))
+        return 0;
+
+    if (!readDouble("Enter new height: ", &height))
+        return 0;
+
+    rectangles[index].width = width;
+    rectangles[index].height = height;
+
+    calculate(&rectangles[index]);
+
+    printf("Rectangle updated successfully!\n");
+    return 1;
+}
+
+/* Delete a rectangle */
+int deleteRectangle(void)
+{
+    int id, index, i;
+
+    if (!readInt("Enter ID to delete: ", &id))
+        return 0;
+
+    index = findRectangle(id);
+
+    if (index == -1) {
+        printf("Rectangle not found.\n");
+        return 1;
+    }
+
+    for (i = index; i < count - 1; i++) {
+        rectangles[i] = rectangles[i + 1];
+    }
+
+    count--;
+
+    printf("Rectangle deleted successfully!\n");
+    return 1;
+}
+
+/* Show area statistics */
+void showStatistics(void)
+{
+    int i;
+    int largest = 0, smallest = 0;
+    double total = 0;
+
+    if (count == 0) {
+        printf("No data available.\n");
+        return;
+    }
+
+    for (i = 0; i < count; i++) {
+        total += rectangles[i].area;
+
+        if (rectangles[i].area > rectangles[largest].area)
+            largest = i;
+
+        if (rectangles[i].area < rectangles[smallest].area)
+            smallest = i;
+    }
+
+    printf("\nLargest area: %.2f", rectangles[largest].area);
+    printf("\nSmallest area: %.2f", rectangles[smallest].area);
+    printf("\nTotal area: %.2f", total);
+    printf("\nAverage area: %.2f\n", total / count);
+}
+
+/* Sort rectangles by area */
+void sortRectangles(void)
+{
+    int i, j;
+    struct Rectangle temp;
+
+    if (count == 0) {
+        printf("No rectangles available.\n");
+        return;
+    }
+
+    for (i = 0; i < count - 1; i++) {
+        for (j = 0; j < count - i - 1; j++) {
+            if (rectangles[j].area > rectangles[j + 1].area) {
+                temp = rectangles[j];
+                rectangles[j] = rectangles[j + 1];
+                rectangles[j + 1] = temp;
+            }
+        }
+    }
+
+    printf("Rectangles sorted by area (ascending).\n");
+    displayAll();
+}
+
+/* Filter rectangles by minimum area */
+int filterRectangles(void)
+{
+    double minimum;
+    int i, found = 0;
+
+    if (!readDouble("Enter minimum area: ", &minimum))
+        return 0;
+
+    for (i = 0; i < count; i++) {
+        if (rectangles[i].area >= minimum) {
+            displayRectangle(rectangles[i]);
+            found = 1;
+        }
+    }
+
+    if (!found)
+        printf("No rectangles found with that area.\n");
+
+    return 1;
+}
+
+/* Main function */
 int main(void)
 {
-    RectangleList list = {NULL, 0, 0};
-    int initial_count;
     int choice;
     int running = 1;
 
-    printf("Rectangle Inventory and Geometry Analysis\n");
-
-    while (1) {
-        if (!read_int("Enter initial capacity (1-1000): ", &initial_count)) {
-            return 0;
-        }
-        if (initial_count <= MAX_RECTANGLES) {
-            break;
-        }
-        printf("Capacity cannot exceed %d.\n", MAX_RECTANGLES);
-    }
-
-    list.items = malloc((size_t)initial_count * sizeof(Rectangle));
-    if (list.items == NULL) {
-        printf("Memory allocation failed.\n");
-        return 1;
-    }
-    list.capacity = (size_t)initial_count;
+    printf("=================================\n");
+    printf("   RECTANGLE INVENTORY SYSTEM\n");
+    printf("=================================\n");
 
     while (running) {
-        printf("\n1. Add rectangle\n2. Display all\n3. Search by ID\n");
-        printf("4. Update rectangle\n5. Delete rectangle\n");
-        printf("6. Area statistics\n7. Sort by area\n8. Filter by area\n");
-        printf("9. Exit\n");
+        printf("\n1. Add Rectangle");
+        printf("\n2. Display All Rectangles");
+        printf("\n3. Search Rectangle");
+        printf("\n4. Update Rectangle");
+        printf("\n5. Delete Rectangle");
+        printf("\n6. Area Statistics");
+        printf("\n7. Sort by Area");
+        printf("\n8. Filter by Area");
+        printf("\n9. Exit\n");
 
-        if (!read_int("Choose: ", &choice)) {
+        if (!readInt("\nEnter your choice: ", &choice))
             break;
-        }
 
         switch (choice) {
-            case 1: running = add_rectangle(&list); break;
-            case 2: display_all(&list); break;
-            case 3: running = search_rectangle(&list); break;
-            case 4: running = update_rectangle(&list); break;
-            case 5: running = delete_rectangle(&list); break;
-            case 6: show_statistics(&list); break;
-            case 7: show_sorted(&list); break;
-            case 8: running = filter_by_area(&list); break;
-            case 9: running = 0; break;
-            default: printf("Invalid choice.\n"); break;
+            case 1:
+                running = addRectangle();
+                break;
+
+            case 2:
+                displayAll();
+                break;
+
+            case 3:
+                running = searchRectangle();
+                break;
+
+            case 4:
+                running = updateRectangle();
+                break;
+
+            case 5:
+                running = deleteRectangle();
+                break;
+
+            case 6:
+                showStatistics();
+                break;
+
+            case 7:
+                sortRectangles();
+                break;
+
+            case 8:
+                running = filterRectangles();
+                break;
+
+            case 9:
+                running = 0;
+                break;
+
+            default:
+                printf("Invalid choice. Try again.\n");
         }
     }
 
-    free(list.items);
-    printf("Program ended. Memory released.\n");
+    free(rectangles);
+    rectangles = NULL;
+
+    printf("\nProgram ended. Thank you!\n");
+
+    return 0;
 }

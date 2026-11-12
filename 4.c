@@ -10,7 +10,6 @@
 #define NAME_SIZE 50
 #define MAX_STUDENTS 10000
 
-// Structure for storing student details
 typedef struct {
     int roll_number;
     char name[NAME_SIZE];
@@ -18,14 +17,14 @@ typedef struct {
     float gpa;
 } Student;
 
-// Structure for managing student records
+
 typedef struct {
     Student *students;
     size_t count;
     size_t capacity;
 } StudentList;
 
-// Read a line of input
+
 int read_line(const char *message, char *text, size_t size)
 {
     size_t length;
@@ -61,7 +60,7 @@ int read_line(const char *message, char *text, size_t size)
     return -1;
 }
 
-// Read an integer from the user
+
 int get_integer(const char *message, int *value)
 {
     char text[100];
@@ -99,7 +98,7 @@ int get_integer(const char *message, int *value)
     }
 }
 
-// Read and validate GPA
+
 int get_gpa(const char *message, float *gpa)
 {
     char text[100];
@@ -137,7 +136,6 @@ int get_gpa(const char *message, float *gpa)
     }
 }
 
-// Read student name
 int get_name(char name[NAME_SIZE])
 {
     char text[200];
@@ -186,7 +184,7 @@ int find_student(const StudentList *list, int roll_number)
     return -1;
 }
 
-// Increase array capacity
+
 int grow_list(StudentList *list)
 {
     size_t new_capacity;
@@ -224,7 +222,7 @@ int grow_list(StudentList *list)
     return 1;
 }
 
-// Display one student
+
 void display_student(const Student *student)
 {
     printf("Roll: %d | Name: %s | Age: %d | GPA: %.2f\n",
@@ -234,7 +232,7 @@ void display_student(const Student *student)
            student->gpa);
 }
 
-// Add a new student
+
 int add_student(StudentList *list)
 {
     Student student;
@@ -286,7 +284,7 @@ int add_student(StudentList *list)
     return 1;
 }
 
-// Display all students
+
 void display_all(const StudentList *list)
 {
     size_t i;
@@ -303,7 +301,7 @@ void display_all(const StudentList *list)
     }
 }
 
-// Search a student
+
 int search_student(const StudentList *list)
 {
     int roll_number;
@@ -324,7 +322,7 @@ int search_student(const StudentList *list)
     return 1;
 }
 
-// Update student details
+
 int update_student(StudentList *list)
 {
     int roll_number;
@@ -371,7 +369,7 @@ int update_student(StudentList *list)
     return 1;
 }
 
-// Delete a student
+
 int delete_student(StudentList *list)
 {
     int roll_number;
@@ -400,7 +398,7 @@ int delete_student(StudentList *list)
     return 1;
 }
 
-// Show GPA statistics
+
 void show_gpa_summary(const StudentList *list)
 {
     size_t i;
@@ -439,7 +437,7 @@ void show_gpa_summary(const StudentList *list)
            total / (double)list->count);
 }
 
-// Compare students for sorting
+
 int compare_gpa(const void *a, const void *b)
 {
     const Student *first = (const Student *)a;
@@ -464,7 +462,7 @@ int compare_gpa(const void *a, const void *b)
     return 0;
 }
 
-// Display students sorted by GPA
+
 void show_sorted_students(const StudentList *list)
 {
     Student *copy;
@@ -496,7 +494,7 @@ void show_sorted_students(const StudentList *list)
     free(copy);
 }
 
-// Main function
+
 int main(void)
 {
     StudentList list;

@@ -20,7 +20,7 @@ struct Rectangle *rectangles = NULL;
 int count = 0;
 int capacity = 0;
 
-/* Read a line from the user */
+
 int readLine(char text[], int size)
 {
     if (fgets(text, size, stdin) == NULL)
@@ -36,7 +36,7 @@ int readLine(char text[], int size)
     return 1;
 }
 
-/* Read a positive integer */
+
 int readInt(char message[], int *value)
 {
     char text[100];
@@ -65,7 +65,7 @@ int readInt(char message[], int *value)
     }
 }
 
-/* Read a positive decimal number */
+
 int readDouble(char message[], double *value)
 {
     char text[100];
@@ -95,14 +95,14 @@ int readDouble(char message[], double *value)
     }
 }
 
-/* Calculate area and perimeter */
+
 void calculate(struct Rectangle *r)
 {
     r->area = r->width * r->height;
     r->perimeter = 2 * (r->width + r->height);
 }
 
-/* Find rectangle using ID */
+
 int findRectangle(int id)
 {
     int i;
@@ -115,7 +115,7 @@ int findRectangle(int id)
     return -1;
 }
 
-/* Increase array size when needed */
+
 int increaseCapacity(void)
 {
     int newCapacity;
@@ -140,7 +140,7 @@ int increaseCapacity(void)
     return 1;
 }
 
-/* Check whether rectangle is a square */
+
 int isSquare(struct Rectangle r)
 {
     double difference;
@@ -154,7 +154,7 @@ int isSquare(struct Rectangle r)
            (r.width > r.height ? r.width : r.height);
 }
 
-/* Display one rectangle */
+
 void displayRectangle(struct Rectangle r)
 {
     printf("\nID: %d", r.id);
@@ -169,7 +169,7 @@ void displayRectangle(struct Rectangle r)
         printf("\nType: Rectangle\n");
 }
 
-/* Add a rectangle */
+
 int addRectangle(void)
 {
     struct Rectangle r;
@@ -202,7 +202,7 @@ int addRectangle(void)
     return 1;
 }
 
-/* Display all rectangles */
+
 void displayAll(void)
 {
     int i;
@@ -218,7 +218,7 @@ void displayAll(void)
     }
 }
 
-/* Search for a rectangle */
+
 int searchRectangle(void)
 {
     int id, index;
@@ -236,7 +236,7 @@ int searchRectangle(void)
     return 1;
 }
 
-/* Update rectangle details */
+
 int updateRectangle(void)
 {
     int id, index;
@@ -267,7 +267,7 @@ int updateRectangle(void)
     return 1;
 }
 
-/* Delete a rectangle */
+
 int deleteRectangle(void)
 {
     int id, index, i;
@@ -292,7 +292,7 @@ int deleteRectangle(void)
     return 1;
 }
 
-/* Show area statistics */
+
 void showStatistics(void)
 {
     int i;
@@ -320,7 +320,7 @@ void showStatistics(void)
     printf("\nAverage area: %.2f\n", total / count);
 }
 
-/* Sort rectangles by area */
+
 void sortRectangles(void)
 {
     int i, j;
@@ -345,7 +345,7 @@ void sortRectangles(void)
     displayAll();
 }
 
-/* Filter rectangles by minimum area */
+
 int filterRectangles(void)
 {
     double minimum;
@@ -367,7 +367,7 @@ int filterRectangles(void)
     return 1;
 }
 
-/* Main function */
+
 int main(void)
 {
     int choice;

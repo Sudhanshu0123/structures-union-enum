@@ -1,4 +1,59 @@
+#include <stdio.h>
+#include <string.h>
+#include <stddef.h>
+#include <stdalign.h>
+
+typedef struct {
+    int number;
+    float decimal;
+    char text[20];
+} StructData;
+
+typedef union {
+    int number;
+    float decimal;
+    char text[20];
+} UnionData;
+
+typedef enum {
+    VALUE_INT,
+    VALUE_FLOAT,
+    VALUE_TEXT
+} ValueType;
+
+typedef struct {
+    UnionData data;
+    ValueType type;
+} TypedRecord;
+
+int set_integer(TypedRecord *record, int value)
+{
+    if (record == NULL) {
+        return 0;
     }
+
+    record->data.number = value;
+    record->type = VALUE_INT;
+    return 1;
+}
+
+int set_float(TypedRecord *record, float value)
+{
+    if (record == NULL) {
+        return 0;
+    }
+
+    record->data.decimal = value;
+    record->type = VALUE_FLOAT;
+    return 1;
+}
+
+int set_text(TypedRecord *record, const char *value)
+{
+    size_t length;
+
+    if (record == NULL || value == NULL) {
+        return 0;    }
 
     length = strlen(value);
     if (length >= sizeof(record->data.text)) {

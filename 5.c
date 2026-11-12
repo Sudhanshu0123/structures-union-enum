@@ -1,49 +1,86 @@
-// Structures - 2
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <math.h>
+#include <stdint.h>
+
+#define MAX_RECTANGLES 1000
+#define TOLERANCE 0.0001
 
 typedef struct {
-    float width;
-    float height;
-    float area;
+    int id;
+    double width;
+    double height;
+    double area;
+    double perimeter;
 } Rectangle;
 
-void calculate_area(Rectangle *r) {
-    r->area = r->width * r->height;
-}
+typedef struct {
+    Rectangle *items;
+    size_t count;
+    size_t capacity;
+} RectangleList;
 
-Rectangle* create_rectangle_array(int size) {
-    Rectangle *rectangles = (Rectangle*) malloc(size * sizeof(Rectangle));
-    return rectangles;
-}
+int read_line(const char *message, char *text, size_t size)
+{
+    size_t len;
+    int ch;
 
-void add_rectangle(Rectangle *rectangles, int index, float width, float height) {
-    rectangles[index].width = width;
-    rectangles[index].height = height;
-    calculate_area(&rectangles[index]);
-}
+    printf("%s", message);
 
-void display_rectangles(Rectangle *rectangles, int size) {
-    for (int i = 0; i < size; i++) {
-        printf("Rectangle %d: Width = %.2f, Height = %.2f, Area = %.2f\n", 
-               i, rectangles[i].width, rectangles[i].height, rectangles[i].area);
+    if (fgets(text, (int)size, stdin) == NULL) {
+        return 0;
     }
+
+    len = strlen(text);
+
+    if (len > 0 && text[len - 1] == '\n') {
+        text[len - 1] = '\0';
+        return 1;
+    }
+
+    if (feof(stdin)) {
+        return 1;
+    }
+
+    ch = getchar();
+    if (ch == '\n' || ch == EOF) {
+        return 1;
+    }
+
+    while (ch != '\n' && ch != EOF) {
+        ch = getchar();
+    }
+
+    return -1;
 }
 
-void free_rectangle_array(Rectangle *rectangles) {
-    free(rectangles);
-}
+int read_int(const char *message, int *value)
+{
+    char text[100];
+    char *end;
+    long number;
+    int status;
 
-int main() {
-    int number_of_rectangles = 2;
-    Rectangle *rectangles = create_rectangle_array(number_of_rectangles);
+    while (1) {
+        status = read_line(message, text, sizeof(text));
+        if (status == 0) {
+            return 0;
+        }
+        if (status < 0) {
+            printf("Input is too long.\n");
+            continue;
+        }
 
-    add_rectangle(rectangles, 0, 5.0, 4.0);
-    add_rectangle(rectangles, 1, 6.5, 3.5);
+        errno = 0;
+        number = strtol(text, &end, 10);
+        while (*end == ' ' || *end == '\t') {
+            end++;
+        }
 
-    display_rectangles(rectangles, number_of_rectangles);
-
-    free_rectangle_array(rectangles);
-
-    return 0;
-}
+        if (end == text || *end != '\0' || errno != 0 ||
+            number < 1 || number > 2147483647L) {
+            printf("Enter a positive whole number.\n");
+            continue;
+        }
